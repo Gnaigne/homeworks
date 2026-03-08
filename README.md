@@ -11,10 +11,20 @@ API quản lý tài nguyên mạng (domain, IP, service) với CRUD operations �
 - Python 3.10+
 - Docker + Docker Compose plugin (`docker compose`)
 
+### 0. Clone project
+
+```bash
+git clone https://github.com/Gnaigne/homeworks.git
+cd homeworks
+git checkout homework
+```
+
 ### 1. Tạo virtual environment (chỉ cần chạy 1 lần)
 
 ```bash
 make venv
+# Hoặc trên Windows PowerShell:
+.\make.ps1 venv
 ```
 
 > Lệnh này tạo folder `.venv/` và cài tất cả dependencies từ `requirements.txt`.
@@ -24,6 +34,8 @@ make venv
 
 ```bash
 make db-start
+# Hoặc trên Windows PowerShell:
+.\make.ps1 db-start
 ```
 
 > Lần đầu tiên chạy sẽ tự động:
@@ -35,12 +47,14 @@ make db-start
 
 ```bash
 make run
+# Hoặc trên Windows PowerShell:
+.\make.ps1 run
 ```
 
 Server:
 
 - **Swagger UI:** http://localhost:8080/docs — test API trực tiếp trên trình duyệt
-- **pgAdmin:** http://localhost:5050 (email: `admin@admin.com` / password: `admin`)
+- **pgAdmin:** http://localhost:5050
 
 ### 🔌 Kết nối pgAdmin để xem database trực quan
 
@@ -74,15 +88,19 @@ Sau khi đăng nhập pgAdmin, cần tạo server connection:
 | DELETE | `/assets/{id}` | Xóa asset |
 | DELETE | `/assets/batch?ids=...` | Xóa nhiều asset |
 
-## 🛠️ Makefile Commands
+## 🛠️ Makefile / PowerShell Commands
+
+Hỗ trợ chạy thao tác qua `make` (Linux/macOS) hoặc script file `make.ps1` (Windows).
 
 ```bash
-make help     # Xem tất cả lệnh có sẵn
+make help          # Linux/macOS
+.\make.ps1 help    # Windows (xem tất cả lệnh có sẵn)
 ```
 
 ### Database
 
 ```bash
+# Thay thế `make` bằng `.\make.ps1` trên Windows
 make db-start       # Khởi động PostgreSQL + pgAdmin
 make db-stop        # Tắt (data vẫn còn)
 make clean          # Xóa containers + volumes (reset toàn bộ DB)
@@ -91,6 +109,7 @@ make clean          # Xóa containers + volumes (reset toàn bộ DB)
 ### Migrations & Data
 
 ```bash
+# Thay thế `make` bằng `.\make.ps1` trên Windows
 make migrate-up     # Tạo bảng assets
 make migrate-down   # Xóa bảng assets
 make seed           # Thêm 17 assets mẫu
@@ -102,6 +121,7 @@ make seed-rollback  # Xóa dữ liệu mẫu (DB rỗng)
 ### Tiện ích
 
 ```bash
+# Thay thế `make` bằng `.\make.ps1` trên Windows
 make db-tables      # Xem danh sách bảng
 make db-assets      # Xem tất cả assets
 make db-shell       # Mở psql shell
