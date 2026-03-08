@@ -100,12 +100,12 @@ seed-rollback:
 # Chạy server với PostgreSQL (session 3)
 run:
 	@echo "🚀 Starting Mini ASM Server (PostgreSQL)..."
-	cd $(CURDIR) && .venv/bin/python -m app.server.main
+	cd "$(CURDIR)" && .venv/bin/python -m app.server.main
 
 # Chạy server với In-Memory storage (quay lại session 2)
 run-memory:
 	@echo "🚀 Starting Mini ASM Server (In-Memory)..."
-	USE_MEMORY=true cd $(CURDIR) && .venv/bin/python -m app.server.main
+	USE_MEMORY=true cd "$(CURDIR)" && .venv/bin/python -m app.server.main
 
 # =============================================================================
 # SETUP & CLEANUP

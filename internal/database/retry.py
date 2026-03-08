@@ -149,7 +149,7 @@ def connect_with_retry(
                 #   1 << 1 = dịch bit 1 sang trái 1 vị trí = 0010 = 2
                 #   1 << 2 = dịch bit 1 sang trái 2 vị trí = 0100 = 4
                 #   Tổng quát: 1 << n = 2^n (2 mũ n)
-                wait_seconds = 2 << (attempt - 1)
+                wait_seconds = 1 << (attempt - 1)
 
                 logger.warning(
                     f"⚠️  Connection failed: {e}. "

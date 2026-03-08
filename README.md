@@ -23,8 +23,6 @@ git checkout homework
 
 ```bash
 make venv
-# Hoặc trên Windows PowerShell:
-.\make.ps1 venv
 ```
 
 > Lệnh này tạo folder `.venv/` và cài tất cả dependencies từ `requirements.txt`.
@@ -34,8 +32,6 @@ make venv
 
 ```bash
 make db-start
-# Hoặc trên Windows PowerShell:
-.\make.ps1 db-start
 ```
 
 > Lần đầu tiên chạy sẽ tự động:
@@ -47,8 +43,6 @@ make db-start
 
 ```bash
 make run
-# Hoặc trên Windows PowerShell:
-.\make.ps1 run
 ```
 
 Server:
@@ -88,9 +82,9 @@ Sau khi đăng nhập pgAdmin, cần tạo server connection:
 | DELETE | `/assets/{id}` | Xóa asset |
 | DELETE | `/assets/batch?ids=...` | Xóa nhiều asset |
 
-## 🏃 Cách chạy cơ bản (Không dùng Makefile/PowerShell Script)
+## 🏃 Cách chạy cơ bản (Không dùng Makefile)
 
-Nếu bạn không muốn (hoặc không thể) dùng `make` hay `.\make.ps1`, bạn có thể chạy tuần tự các lệnh sau:
+Nếu không muốn dùng `make`, có thể chạy tuần tự các lệnh sau:
 
 ### 1. Tạo và kích hoạt môi trường ảo
 
@@ -115,27 +109,52 @@ docker compose up -d
 ### 3. Chạy Server
 
 ```bash
-# Đảm bảo bạn đang ở thư mục gốc chứa file requirements.txt
+# Đảm bảo đang ở thư mục gốc chứa file requirements.txt
 # Đảm bảo môi trường ảo (.venv) đã được kích hoạt
 python -m app.server.main
 ```
 
 ---
 
-## 🛠️ Makefile / PowerShell Commands
+## 🛠️ Makefile Commands
 
-Hỗ trợ chạy thao tác qua `make` (Linux/macOS) hoặc script file `make.ps1` (Windows).
+Hỗ trợ chạy thao tác qua `make` (Linux/macOS).
 
+**Dành cho người dùng Windows:**
+
+Để dùng được các lệnh `make` tiện lợi như trên hệ thống Linux, cần sử dụng Windows Subsystem for Linux (WSL). Thực hiện như sau:
+
+**1. Cài đặt WSL (nếu máy chưa có):**
+Mở PowerShell bằng quyền Quản trị viên (Run as Administrator) và chạy lệnh:
+```bash
+wsl --install
+```
+*Khởi động lại máy tính nếu được yêu cầu để hoàn tất việc cài đặt.*
+
+**2. Kích hoạt môi trường WSL:**
+Mở Command Prompt hoặc PowerShell tại thư mục dự án và gõ `wsl` để tự động chuyển sang máy ảo Linux. Dấu nhắc lệnh sẽ thay đổi:
+```bash
+C:\...\homeworks> wsl
+giangne@GIANGPC:/mnt/c/.../homeworks$ 
+```
+Sau đó, có thể chạy tất cả các lệnh `make` bình thường ở màn hình có dấu `$`.
+
+> **⚠️ Lưu ý lỗi khi lần đầu chạy `make venv` trên WSL:**
+> Nếu gặp lỗi do thiếu gói tạo môi trường ảo Python của Linux (báo lỗi `ensurepip is not available`), hãy chạy lần lượt 2 lệnh sau:
+> ```bash
+> sudo apt update
+> sudo apt install python3-venv python3-pip -y
+> ```
+> *(Khi được hỏi mật khẩu sudo, hãy nhập mật khẩu đã tạo lúc cài Ubuntu).*
+> Sau đó chạy lại `make venv` là sẽ thành công.
 
 ```bash
-make help          # Linux/macOS
-.\make.ps1 help    # Windows (xem tất cả lệnh có sẵn)
+make help          # Xem tất cả lệnh có sẵn
 ```
 
 ### Database
 
 ```bash
-# Thay thế `make` bằng `.\make.ps1` trên Windows
 make db-start       # Khởi động PostgreSQL + pgAdmin
 make db-stop        # Tắt (data vẫn còn)
 make clean          # Xóa containers + volumes (reset toàn bộ DB)
@@ -144,7 +163,6 @@ make clean          # Xóa containers + volumes (reset toàn bộ DB)
 ### Migrations & Data
 
 ```bash
-# Thay thế `make` bằng `.\make.ps1` trên Windows
 make migrate-up     # Tạo bảng assets
 make migrate-down   # Xóa bảng assets
 make seed           # Thêm 17 assets mẫu
@@ -156,7 +174,6 @@ make seed-rollback  # Xóa dữ liệu mẫu (DB rỗng)
 ### Tiện ích
 
 ```bash
-# Thay thế `make` bằng `.\make.ps1` trên Windows
 make db-tables      # Xem danh sách bảng
 make db-assets      # Xem tất cả assets
 make db-shell       # Mở psql shell
