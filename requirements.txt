@@ -1,0 +1,30 @@
+# =============================================================================
+# Session 2 + 3 — Basic API + Database Integration
+# Tương đương với go.mod trong Go
+# =============================================================================
+
+# --- Session 2 (giữ nguyên) ---
+
+# FastAPI - Web framework hiện đại cho Python
+# Cung cấp routing, dependency injection, auto-generated docs (Swagger UI)
+fastapi==0.115.12
+
+# Uvicorn - ASGI server để chạy FastAPI
+# ASGI = Asynchronous Server Gateway Interface
+uvicorn==0.34.2
+
+# Pydantic đã đi kèm FastAPI, nhưng khai báo rõ để đảm bảo version
+# Dùng cho data validation và serialization (tương đương Go struct tags)
+pydantic==2.11.1
+
+# --- Session 3 (MỚI THÊM) ---
+
+# psycopg2-binary - PostgreSQL driver cho Python
+# Tương đương: "github.com/lib/pq" trong Go
+# Dùng bản "-binary" để không cần compile từ source (dễ cài hơn)
+psycopg2-binary==2.9.10
+
+# python-dotenv - Đọc biến môi trường từ file .env
+# Tương đương: "github.com/spf13/viper" trong Go (đơn giản hơn)
+# Giúp không hardcode password/config trong source code
+python-dotenv==1.1.0

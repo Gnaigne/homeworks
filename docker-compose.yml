@@ -1,0 +1,91 @@
+# =============================================================================
+# Docker Compose — Session 3: Database Integration
+# =============================================================================
+# Chạy PostgreSQL + pgAdmin trong Docker container cho development.
+#
+# Lệnh:
+#   docker compose up -d        → Khởi động PostgreSQL + pgAdmin (chạy nền)
+#   docker compose down          → Tắt tất cả
+#   docker compose down -v       → Tắt + xóa dữ liệu (reset hoàn toàn)
+#   docker compose logs -f db    → Xem log của PostgreSQL
+#
+# Truy cập:
+#   PostgreSQL: localhost:5432
+#   pgAdmin:    http://localhost:5050
+#               Email:    admin@admin.com
+#               Password: admin
+# =============================================================================
+
+services:
+  # ---------------------------------------------------------------------------
+  # PostgreSQL Database
+  # ---------------------------------------------------------------------------
+  db:
+    image: postgres:15-alpine
+    container_name: mini-asm-db
+    restart: unless-stopped
+
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: mini_asm
+
+    ports:
+      - "5432:5432"
+
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./migrations:/docker-entrypoint-initdb.d
+
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+    networks:
+      - mini-asm-network
+
+  # ---------------------------------------------------------------------------
+  # pgAdmin 4 — Giao diện web quản lý PostgreSQL
+  # ---------------------------------------------------------------------------
+  # pgAdmin là tool GUI phổ biến nhất để xem/quản lý PostgreSQL.
+  # Truy cập qua trình duyệt: http://localhost:5050
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: mini-asm-pgadmin
+    restart: unless-stopped
+
+    environment:
+      # Tài khoản đăng nhập pgAdmin (KHÔNG phải tài khoản PostgreSQL)
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+      # Tắt chế độ cần login lại liên tục (tiện cho development)
+      PGADMIN_CONFIG_SERVER_MODE: "False"
+
+    ports:
+      # pgAdmin chạy trên port 5050 của máy host
+      # Mở trình duyệt: http://localhost:5050
+      - "5050:80"
+
+    volumes:
+      # Lưu cấu hình pgAdmin (servers đã đăng ký, settings, ...)
+      # Nếu không có volume → mỗi lần restart phải đăng ký server lại
+      - pgadmin_data:/var/lib/pgadmin
+
+    depends_on:
+      db:
+        condition: service_healthy
+        # ↑ Đợi PostgreSQL healthy (pg_isready OK) rồi mới khởi động pgAdmin
+        #   Tránh pgAdmin start trước khi DB sẵn sàng
+
+    networks:
+      - mini-asm-network
+
+networks:
+  mini-asm-network:
+    driver: bridge
+
+volumes:
+  pgdata:
+  pgadmin_data:
