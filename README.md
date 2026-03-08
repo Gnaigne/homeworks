@@ -88,9 +88,44 @@ Sau khi đăng nhập pgAdmin, cần tạo server connection:
 | DELETE | `/assets/{id}` | Xóa asset |
 | DELETE | `/assets/batch?ids=...` | Xóa nhiều asset |
 
+## 🏃 Cách chạy cơ bản (Không dùng Makefile/PowerShell Script)
+
+Nếu bạn không muốn (hoặc không thể) dùng `make` hay `.\make.ps1`, bạn có thể chạy tuần tự các lệnh sau:
+
+### 1. Tạo và kích hoạt môi trường ảo
+
+```bash
+# Linux / macOS:
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+
+# Windows PowerShell:
+python -m venv .venv
+.\.venv\Scripts\activate
+pip install -r requirements.txt
+```
+
+### 2. Khởi động Database (Docker)
+
+```bash
+docker compose up -d
+```
+
+### 3. Chạy Server
+
+```bash
+# Đảm bảo bạn đang ở thư mục gốc chứa file requirements.txt
+# Đảm bảo môi trường ảo (.venv) đã được kích hoạt
+python -m app.server.main
+```
+
+---
+
 ## 🛠️ Makefile / PowerShell Commands
 
 Hỗ trợ chạy thao tác qua `make` (Linux/macOS) hoặc script file `make.ps1` (Windows).
+
 
 ```bash
 make help          # Linux/macOS
