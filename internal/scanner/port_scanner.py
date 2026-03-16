@@ -65,15 +65,23 @@ class PortScanner(BaseScanner):
 
     def _is_authorized(self, target: str) -> bool:
         """Kiểm tra xem mục tiêu có được cấp phép quét hay không."""
-        if target in self.authorized_ips:
-            return True
-            
+        import ipaddress
+        
         try:
-            # Nếu truyền vào domain (ví dụ: localhost), phân giải ra IP để check
-            ip_address = socket.gethostbyname(target)
-            return ip_address in self.authorized_ips
-        except socket.gaierror:
-            return False
+            # Phân giải ra IP nếu là domain (ex: localhost)
+            ip_str = target
+            if not target[0].isdigit(): # Simple check if it might be a domain
+                try:
+                    ip_str = socket.gethostbyname(target)
+                except socket.gaierror:
+                    pass
+                    
+            ip = ipaddress.ip_address(ip_str)
+            # Cho phép localhost và các dải mạng Private (10.x, 172.16.x, 192.168.x)
+            return ip.is_loopback or ip.is_private
+        except ValueError:
+            return target in self.authorized_ips
+
 
     async def _scan_single_port(self, target: str, port: int) -> CreatePortScanRecordRequest:
         """
