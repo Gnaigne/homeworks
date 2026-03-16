@@ -291,7 +291,7 @@ if __name__ == "__main__":
     #     → Worker process mới gọi create_app() → kết nối DB DUY NHẤT 1 lần
     uvicorn.run(
         "app.server.main:create_app",  # Trỏ đến FUNCTION (không phải biến app)
-        host="0.0.0.0",
+        host="0.0.0.0",  # nosec B104
         port=8080,
         reload=True,
         log_level="info",

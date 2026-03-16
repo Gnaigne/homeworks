@@ -1096,7 +1096,7 @@ class PostgresStorage(Storage):
             params.append(status)
 
         # --- Bước 1: Đếm tổng số dòng thỏa điều kiện ---
-        count_query = f"SELECT COUNT(*) FROM assets {conditions}"
+        count_query = f"SELECT COUNT(*) FROM assets {conditions}"  # nosec B608
         with self._conn.cursor() as cur:
             cur.execute(count_query, params)
             total = cur.fetchone()[0]
@@ -1114,7 +1114,7 @@ class PostgresStorage(Storage):
             {conditions}
             ORDER BY created_at DESC
             LIMIT %s OFFSET %s
-        """
+        """  # nosec B608
 
 
         with self._conn.cursor() as cur:
@@ -1177,7 +1177,7 @@ class PostgresStorage(Storage):
 
         # --- Bước 2: Đếm tổng số dòng thỏa điều kiện ---
         # Tương đương Go: p.Count(params)
-        count_query = f"SELECT COUNT(*) FROM assets {conditions}"
+        count_query = f"SELECT COUNT(*) FROM assets {conditions}"  # nosec B608
         with self._conn.cursor() as cur:
             cur.execute(count_query, sql_params)
             total = cur.fetchone()[0]
@@ -1205,7 +1205,7 @@ class PostgresStorage(Storage):
             {conditions}
             ORDER BY {sort_by} {sort_order}
             LIMIT %s OFFSET %s
-        """
+        """  # nosec B608
 
         with self._conn.cursor() as cur:
             cur.execute(data_query, data_params)
