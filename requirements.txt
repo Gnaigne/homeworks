@@ -39,7 +39,7 @@ dnspython==2.7.0
 python-whois==0.9.4
 
 # aiohttp - HTTP client bất đồng bộ / async (dành cho DNS bruteforce concurrency cao)
-aiohttp==3.11.11
+aiohttp==3.13.3
 
 # --- Session 6 (Testing - MỚI THÊM) ---
 pytest==8.3.4
