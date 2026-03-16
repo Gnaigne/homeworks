@@ -30,9 +30,19 @@ help:
 	@echo "║    make run            Chạy server (PostgreSQL)              ║"
 	@echo "║    make run-memory     Chạy server (In-Memory, session 2)    ║"
 	@echo "║                                                              ║"
+	@echo "║  Testing:                                                    ║"
+	@echo "║    make test           Chạy unit tests cơ bản                ║"
+	@echo "║    make test-cov       Chạy tests và xem độ phủ (Coverage)   ║"
+	@echo "║                                                              ║"
 	@echo "║  Setup & Cleanup:                                            ║"
 	@echo "║    make venv           Tạo virtual env + install deps        ║"
 	@echo "║    make clean          Xóa containers + volumes (reset DB)   ║"
+	@echo "║                                                              ║"
+	@echo "║  Full Stack (Docker):                                        ║"
+	@echo "║    make up             Khởi động hệ thống (Frontend+Backend) ║"
+	@echo "║    make down           Tắt hệ thống (Frontend+Backend)       ║"
+	@echo "║    make build          Build lại các Docker images           ║"
+	@echo "║    make logs           Xem log toàn bộ hệ thống (Follow)     ║"
 	@echo "║                                                              ║"
 	@echo "║  Tiện ích:                                                   ║"
 	@echo "║    make db-tables      Xem danh sách bảng                    ║"
@@ -73,11 +83,16 @@ db-shell:
 migrate-up:
 	@echo "⬆️  Running migrations (up)..."
 	docker compose exec db psql -U postgres -d mini_asm -f /docker-entrypoint-initdb.d/001_create_assets.up.sql
+	docker compose exec db psql -U postgres -d mini_asm -f /docker-entrypoint-initdb.d/003_create_scan_jobs_and_results.up.sql
+	docker compose exec db psql -U postgres -d mini_asm -f /docker-entrypoint-initdb.d/004_create_port_records.up.sql
+	docker compose exec db psql -U postgres -d mini_asm -f /docker-entrypoint-initdb.d/005_create_new_scan_records.up.sql
 	@echo "✅ Migrations applied"
 
 # Chạy migration DOWN — xóa bảng assets (rollback)
 migrate-down:
 	@echo "⬇️  Rolling back migrations (down)..."
+	docker compose exec db psql -U postgres -d mini_asm -f /docker-entrypoint-initdb.d/rollback/004_create_port_records.down.sql
+	docker compose exec db psql -U postgres -d mini_asm -f /docker-entrypoint-initdb.d/rollback/003_create_scan_jobs_and_results.down.sql
 	docker compose exec db psql -U postgres -d mini_asm -f /docker-entrypoint-initdb.d/rollback/001_create_assets.down.sql
 	@echo "✅ Migrations rolled back"
 
@@ -108,6 +123,20 @@ run-memory:
 	USE_MEMORY=true cd "$(CURDIR)" && .venv/bin/python -m app.server.main
 
 # =============================================================================
+# TESTING & QUALITY ASSURANCE
+# =============================================================================
+
+# Chạy Unit Tests cơ bản
+test:
+	@echo "🧪 Running tests..."
+	cd "$(CURDIR)" && PYTHONPATH=. .venv/bin/pytest tests/ -v
+
+# Chạy Unit Tests và xuất báo cáo Độ phủ Code
+test-cov:
+	@echo "📊 Running tests with coverage report..."
+	cd "$(CURDIR)" && PYTHONPATH=. .venv/bin/pytest tests/ --cov=internal/model --cov=internal/validator --cov-report=term-missing
+
+# =============================================================================
 # SETUP & CLEANUP
 # =============================================================================
 
@@ -123,6 +152,30 @@ clean:
 	@echo "🧹 Cleaning up..."
 	docker compose down -v
 	@echo "✅ Containers and volumes removed"
+
+# =============================================================================
+# DOCKER (FULL STACK)
+# =============================================================================
+
+# Khởi động toàn bộ hệ thống (DB, Backend, Frontend)
+up:
+	@echo "🚀 Starting full stack..."
+	docker compose up -d
+
+# Tắt toàn bộ hệ thống
+down:
+	@echo "🛑 Stopping full stack..."
+	docker compose down
+
+# Xây dựng lại các Docker images
+build:
+	@echo "🛠️  Building Docker images..."
+	docker compose build
+
+# Xem log toàn bộ hệ thống
+logs:
+	@echo "📋 Full stack logs (Ctrl+C to exit):"
+	docker compose logs -f
 
 # =============================================================================
 # TIỆN ÍCH — Xem nhanh dữ liệu trong database

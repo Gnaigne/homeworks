@@ -1,0 +1,161 @@
+# Common subdomain wordlist for DNS bruteforce
+# Lines starting with # are comments
+
+# Web servers
+www
+www1
+www2
+www3
+web
+web1
+web2
+
+# APIs and applications  
+api
+api1
+api2
+api-prod
+api-dev
+app
+app1
+app2
+portal
+dashboard
+admin
+panel
+
+# Development and staging
+dev
+development
+develop
+test
+testing
+qa
+stage
+staging
+stg
+uat
+preprod
+pre-prod
+demo
+sandbox
+
+# Communication
+mail
+email
+smtp
+imap
+pop
+pop3
+webmail
+exchange
+
+# Servers and infrastructure
+ftp
+sftp
+ssh
+vpn
+remote
+rdp
+ns
+ns1
+ns2
+ns3
+ns4
+dns
+dns1
+dns2
+
+# Databases
+db
+database
+mysql
+postgres
+pgsql
+mongo
+redis
+elastic
+elasticsearch
+
+# Content and media
+blog
+shop
+store
+forum
+cdn
+static
+assets
+media
+images
+img
+files
+download
+downloads
+upload
+
+# Mobile
+m
+mobile
+touch
+wap
+android
+ios
+
+# Security
+secure
+ssl
+tls
+auth
+login
+sso
+
+# Monitoring and tools
+status
+health
+monitor
+monitoring
+metrics
+logs
+logging
+grafana
+kibana
+prometheus
+
+# Cloud providers
+aws
+azure
+gcp
+s3
+ec2
+
+# Old/backup
+old
+backup
+bak
+archive
+www-old
+app-old
+v1
+v2
+v3
+
+# Regional
+us
+eu
+asia
+apac
+uk
+de
+fr
+jp
+cn
+
+# Common words
+help
+support
+docs
+documentation
+news
+about
+careers
+jobs

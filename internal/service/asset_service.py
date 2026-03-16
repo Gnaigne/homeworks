@@ -33,7 +33,8 @@ from internal.model.errors import (
     InvalidStatusError,
     InvalidInputError,
 )
-from internal.storage.storage import Storage
+from internal.storage.storage import Storage, QueryParams
+from internal.validator.asset_validator import AssetValidator
 
 
 class AssetService:
@@ -62,6 +63,8 @@ class AssetService:
             storage: Implementation của Storage interface (memory, postgres, v.v.)
         """
         self._storage = storage
+        # Inject validator (Session 4)
+        self.validator = AssetValidator()
 
     def create_asset(self, name: str, asset_type: str) -> Asset:
         """
@@ -84,16 +87,14 @@ class AssetService:
         Raises:
             EmptyNameError: Nếu name trống
             InvalidTypeError: Nếu type không hợp lệ
+            InvalidInputError: Nếu format không hợp lệ (domain/ip/service)
         """
-        # --- Validation ---
-        if not name or not name.strip():
-            raise EmptyNameError()
+        # --- Validation (Session 4) ---
+        # Gọi validator (sẽ raise InvalidInputError nếu sai format)
+        self.validator.validate_create(name, asset_type)
 
-        # Kiểm tra type hợp lệ bằng cách thử chuyển thành enum
-        try:
-            valid_type = AssetType(asset_type)
-        except ValueError:
-            raise InvalidTypeError()
+        # Lấy Enum hợp lệ (validator đã check type nên ở đây an toàn)
+        valid_type = AssetType(asset_type)
 
         # --- Tạo entity ---
         now = datetime.now(timezone.utc)
@@ -178,26 +179,19 @@ class AssetService:
         # Lấy asset hiện tại — raise AssetNotFoundError nếu không có
         existing = self._storage.get_by_id(id)
 
+        # --- Validation (Session 4) ---
+        # Chỉ validate các field có giá trị truyền vào
+        self.validator.validate_update(name or "", asset_type or "", status or "")
+
         # Áp dụng thay đổi (chỉ field được gửi — partial update)
-        # Tương đương Go: if name != "" { existing.Name = name }
-        updated_name = existing.name
-        updated_type = existing.type
-        updated_status = existing.status
+        updated_name = name if name and name.strip() else existing.name
+        updated_type = AssetType(asset_type) if asset_type else existing.type
+        updated_status = AssetStatus(status) if status else existing.status
 
-        if name is not None and name != "":
-            updated_name = name
-
-        if asset_type is not None and asset_type != "":
-            try:
-                updated_type = AssetType(asset_type)
-            except ValueError:
-                raise InvalidTypeError()
-
-        if status is not None and status != "":
-            try:
-                updated_status = AssetStatus(status)
-            except ValueError:
-                raise InvalidStatusError()
+        # Nếu type thay đổi, phải validate lại name với type mới
+        # Ví dụ: đổi từ 'domain' sang 'ip' → name 'example.com' không hợp lệ nữa
+        if asset_type and asset_type != existing.type.value:
+            self.validator.validate_create(updated_name, updated_type.value)
 
         # Tạo asset mới với dữ liệu đã cập nhật (Pydantic model là immutable by default)
         updated_asset = Asset(
@@ -211,6 +205,44 @@ class AssetService:
 
         self._storage.update(id, updated_asset)
         return updated_asset
+
+    # =========================================================================
+    # [SESSION 4] UNIFIED LIST — Gộp filter + search + sort + pagination
+    # =========================================================================
+
+    def list_assets(self, params: QueryParams) -> dict:
+        """
+        [Session 4] Lấy danh sách asset với đầy đủ filter, search, sort, pagination.
+
+        Tương đương Go:
+            func (s *AssetService) ListAssets(params storage.QueryParams) (*storage.PaginatedResult, error)
+
+        Flow:
+            1. Validate pagination params & sort params
+            2. Validate filter & search params (nếu có)
+            3. Gọi storage.list_assets()
+
+        Args:
+            params: QueryParams chứa thông tin query
+
+        Returns:
+            dict chứa data và metadata phân trang
+        """
+        # --- Validation ---
+        self.validator.validate_pagination_params(params.page, params.page_size)
+        self.validator.validate_sort_params(params.sort_by, params.sort_order)
+
+        if params.asset_type:
+            self.validator.validate_type(params.asset_type)
+            
+        if params.status:
+            self.validator.validate_status(params.status)
+
+        if params.search:
+            self.validator.validate_search_query(params.search)
+
+        # --- Gọi storage ---
+        return self._storage.list_assets(params)
 
     def delete_asset(self, id: str) -> None:
         """
@@ -387,23 +419,19 @@ class AssetService:
         # Ví dụ: enumerate(["a", "b"]) → (0, "a"), (1, "b")
         # index dùng để báo lỗi cụ thể: "asset thứ 2 name trống"
         for index, data in enumerate(assets_data):
-            # Validate name
             name = data.get("name", "")
-            if not name or not name.strip():
-                raise EmptyNameError(
-                    f"asset at index {index}: name is required"
-                )
-
-            # Validate type
             asset_type = data.get("type", "")
-            try:
-                valid_type = AssetType(asset_type)
-            except ValueError:
-                raise InvalidTypeError(
-                    f"asset at index {index}: invalid type '{asset_type}'"
-                )
 
-            # Tạo Asset entity với UUID + timestamps
+            # --- Validation (Session 4) ---
+            try:
+                self.validator.validate_create(name, asset_type)
+            except InvalidInputError as e:
+                # Bọc lỗi bằng index để client biết cái nào sai
+                raise InvalidInputError(f"asset at index {index}: {str(e)}")
+
+            valid_type = AssetType(asset_type)
+
+            # --- Tạo entity ---
             asset = Asset(
                 id=str(uuid.uuid4()),
                 name=name,

@@ -23,9 +23,54 @@ Lợi ích:
 """
 
 from abc import ABC, abstractmethod
+from dataclasses import dataclass, field
 from typing import List, Optional
 
 from internal.model.asset import Asset
+
+
+# =============================================================================
+# [SESSION 4] QueryParams — Gộp tất cả query parameters vào 1 struct
+# =============================================================================
+
+@dataclass
+class QueryParams:
+    """
+    Chứa tất cả query parameters cho việc list assets.
+
+    Tương đương Go struct:
+        type QueryParams struct {
+            Page     int
+            PageSize int
+            Type     string
+            Status   string
+            Search   string
+            SortBy   string
+            SortOrder string
+        }
+
+    Session 4 Enhancement — Thay vì truyền từng parameter riêng lẻ:
+        Trước: filter(type, status), search(query), list_paginated(page, limit, type, status)
+        Sau:   list_assets(QueryParams) — 1 method xử lý tất cả!
+
+    Lợi ích:
+        - Gộp filter + search + pagination + sorting vào 1 chỗ
+        - Thêm filter mới = thêm field, KHÔNG đổi method signature
+        - Dễ truyền qua các layer (handler → service → storage)
+    """
+
+    # Pagination — phân trang
+    page: int = 1                    # Trang hiện tại (bắt đầu từ 1)
+    page_size: int = 20              # Số item mỗi trang (mặc định 20, tối đa 100)
+
+    # Filtering — lọc
+    asset_type: Optional[str] = None  # Lọc theo type (domain/ip/service), None = không lọc
+    status: Optional[str] = None      # Lọc theo status (active/inactive), None = không lọc
+    search: Optional[str] = None      # Tìm kiếm theo name (partial match), None = không tìm
+
+    # Sorting — sắp xếp (Session 4 NEW)
+    sort_by: str = "created_at"       # Cột để sắp xếp (mặc định created_at)
+    sort_order: str = "desc"          # Thứ tự: "asc" hoặc "desc" (mặc định desc)
 
 
 class Storage(ABC):
@@ -248,6 +293,36 @@ class Storage(ABC):
             {
                 "data": List[Asset],   # Danh sách asset trang hiện tại
                 "total": int,          # Tổng số asset thỏa điều kiện
+            }
+        """
+        pass
+
+    # =========================================================================
+    # [SESSION 4] UNIFIED LIST — Gộp filter + search + sort + pagination
+    # =========================================================================
+
+    @abstractmethod
+    def list_assets(self, params: "QueryParams") -> dict:
+        """
+        [Session 4] Lấy danh sách asset với đầy đủ tính năng.
+
+        Tương đương Go:
+            GetAll(params QueryParams) (*PaginatedResult, error)
+
+        Thay thế cho get_all(), filter(), search(), list_paginated().
+        Gộp tất cả vào 1 method duy nhất — unified query approach.
+
+        Args:
+            params: QueryParams chứa filter, search, sort, pagination
+
+        Returns:
+            dict có cấu trúc:
+            {
+                "data": List[Asset],
+                "total": int,
+                "page": int,
+                "page_size": int,
+                "total_pages": int,
             }
         """
         pass

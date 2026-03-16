@@ -77,7 +77,7 @@ from internal.config.config import PostgresConfig       # Cấu hình DB (host, 
 from internal.database.retry import connect_with_retry   # [BÀI 4] Retry kết nối DB (exponential backoff)
 from internal.model.asset import Asset, AssetType, AssetStatus  # Model + Enum
 from internal.model.errors import AssetNotFoundError, DuplicateAssetError  # Custom errors
-from internal.storage.storage import Storage             # Interface (ABC) mà class này implement
+from internal.storage.storage import Storage, QueryParams  # Interface (ABC) + QueryParams (Session 4)
 
 # Tạo logger riêng cho module này
 # "mini-asm.storage.postgres" là tên logger — giúp phân biệt log từ đâu
@@ -1123,3 +1123,105 @@ class PostgresStorage(Storage):
             data = [self._row_to_asset(row) for row in rows]
 
         return {"data": data, "total": total}
+
+    # =========================================================================
+    # [SESSION 4] UNIFIED LIST — Gộp filter + search + sort + pagination
+    # =========================================================================
+
+    def list_assets(self, params: QueryParams) -> dict:
+        """
+        [Session 4] Lấy danh sách asset với đầy đủ: filter + search + sort + pagination.
+
+        Tương đương Go:
+            func (p *PostgresStorage) GetAll(params storage.QueryParams) (*storage.PaginatedResult, error)
+
+        Thay thế cho get_all(), filter(), search(), list_paginated().
+        1 method xử lý tất cả query variations.
+
+        Dynamic Query Building:
+            WHERE 1=1                    ← luôn đúng, đơn giản hóa thêm AND
+            AND type = %s                ← thêm nếu có filter type
+            AND status = %s              ← thêm nếu có filter status
+            AND name ILIKE %s            ← thêm nếu có search
+            ORDER BY created_at DESC     ← sorting (whitelist validated)
+            LIMIT %s OFFSET %s           ← pagination
+
+        Args:
+            params: QueryParams chứa filter, search, sort, pagination
+
+        Returns:
+            dict {"data": [...], "total": int, "page": int, "page_size": int, "total_pages": int}
+        """
+        self._ensure_connection()
+
+        # --- Bước 1: Xây dựng WHERE clause động ---
+        # Tương đương Go: buildQuery(params) → (query, args)
+        conditions = "WHERE 1=1"
+        sql_params: list = []
+
+        # Filter theo type
+        if params.asset_type:
+            conditions += " AND type = %s"
+            sql_params.append(params.asset_type)
+
+        # Filter theo status
+        if params.status:
+            conditions += " AND status = %s"
+            sql_params.append(params.status)
+
+        # Search theo name (ILIKE = case-insensitive LIKE)
+        # Tương đương Go: AND name ILIKE $N → args = append(args, "%"+params.Search+"%")
+        if params.search:
+            conditions += " AND name ILIKE %s"
+            sql_params.append(f"%{params.search}%")
+
+        # --- Bước 2: Đếm tổng số dòng thỏa điều kiện ---
+        # Tương đương Go: p.Count(params)
+        count_query = f"SELECT COUNT(*) FROM assets {conditions}"
+        with self._conn.cursor() as cur:
+            cur.execute(count_query, sql_params)
+            total = cur.fetchone()[0]
+
+        # --- Bước 3: Xây dựng ORDER BY clause ---
+        # Tương đương Go: buildOrderBy(params.SortBy, params.SortOrder)
+        # SECURITY: Double-check whitelist ở storage layer (defense in depth)
+        #   Validator đã check rồi, nhưng storage layer cũng check lần nữa
+        #   Tương đương Go: validFields := map[string]bool{...}
+        valid_sort_fields = {"name", "type", "status", "created_at", "updated_at"}
+        sort_by = params.sort_by if params.sort_by in valid_sort_fields else "created_at"
+        sort_order = params.sort_order.upper() if params.sort_order in ("asc", "desc") else "DESC"
+
+        # --- Bước 4: Lấy dữ liệu trang hiện tại ---
+        offset = (params.page - 1) * params.page_size
+        data_params = sql_params + [params.page_size, offset]
+
+        # sort_by và sort_order đã được whitelist validate → an toàn để dùng f-string
+        # Đây là trường hợp NGOẠI LỆ duy nhất cho phép dùng f-string trong SQL:
+        #   Vì sort field/order đã qua 2 lớp validation (validator + whitelist ở trên)
+        #   KHÔNG BAO GIỜ dùng f-string cho user input trực tiếp!
+        data_query = f"""
+            SELECT id, name, type, status, created_at, updated_at
+            FROM assets
+            {conditions}
+            ORDER BY {sort_by} {sort_order}
+            LIMIT %s OFFSET %s
+        """
+
+        with self._conn.cursor() as cur:
+            cur.execute(data_query, data_params)
+            rows = cur.fetchall()
+            data = [self._row_to_asset(row) for row in rows]
+
+        # --- Bước 5: Tính metadata pagination ---
+        # Tương đương Go: totalPages := int(total) / params.PageSize
+        #   if int(total) % params.PageSize != 0 { totalPages++ }
+        # Python dùng math: (total + page_size - 1) // page_size (ceiling division)
+        total_pages = (total + params.page_size - 1) // params.page_size if total > 0 else 0
+
+        return {
+            "data": data,
+            "total": total,
+            "page": params.page,
+            "page_size": params.page_size,
+            "total_pages": total_pages,
+        }
