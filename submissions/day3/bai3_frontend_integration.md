@@ -1,6 +1,5 @@
-# Báo cáo Bài 3: Tích hợp Frontend
+Bài 3: Tích hợp Frontend
 
-**Họ tên:** Nguyễn Trường Giang
 **Nhiệm vụ:** Kết nối backend API với frontend và đảm bảo các tính năng hoạt động đúng yêu cầu.
 
 ## 1. Hiển thị danh sách Assets
