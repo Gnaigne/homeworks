@@ -12,7 +12,7 @@ function App() {
       <div className="app">
         <nav className="navbar">
           <div className="container">
-            <div className="nav-content">git
+            <div className="nav-content">
               <div className="nav-brand">
                 <Shield className="nav-icon" />
                 <span>Online EASM Platform</span>
