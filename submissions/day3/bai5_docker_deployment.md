@@ -1,6 +1,6 @@
 # Bài 5: Deploy với Docker Compose
 
-Nhiệm vụ này thực hiện triển khai toàn bộ hệ thống (Frontend, Backend, Database) sử dụng Docker Compose để đảm bảo tính nhất quán và dễ dàng vận hành.
+Thực hiện triển khai toàn bộ hệ thống (Frontend, Backend, Database) sử dụng Docker Compose để đảm bảo tính nhất quán và dễ dàng vận hành.
 
 ## 1. Trạng thái các dịch vụ (Docker Compose PS)
 

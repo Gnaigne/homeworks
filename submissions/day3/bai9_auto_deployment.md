@@ -4,7 +4,7 @@
 
 ## 1. Cấu hình Workflow GitHub Actions
 - Đã tạo file `.github/workflows/deploy.yml` chứa định nghĩa cho pipeline CI/CD.
-- **Trigger:** Workflow tự động kích hoạt khi có lệnh `push` (hoặc `merge`) vào nhánh `homework` (hoặc `main`/`master`).
+- **Trigger:** Workflow tự động kích hoạt khi có lệnh `push` (hoặc `merge`) vào nhánh `homework` (hoặc `main`).
 - **Các bước thực hiện trong Workflow:**
   1. `Checkout`: Kéo bản cập nhật code mới nhất.
   2. `Deploy to Server via SSH`: Sử dụng action (như `appleboy/ssh-action`) để tự động SSH vào máy chủ AWS EC2.
@@ -20,7 +20,6 @@ Các thông tin nhạy cảm đã được khai báo bảo mật trong GitHub Se
 
 **Quá trình chạy Job Deploy thành công trên GitHub Actions:**
 ![Job Deploy to Production Successful](images/image9-2.png)
-*(Log GitHub Actions hiển thị luồng chạy hoàn tất với tất cả các bước được đánh dấu tích xanh thành công).*
 
 **Ảnh chụp cho việc tự động update hoàn tất (Code mới có folder workflow trên VM AWS đã tự động được kéo về):**
 ![alt text](images/image9-1.png)
