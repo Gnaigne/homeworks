@@ -28,3 +28,21 @@ psycopg2-binary==2.9.10
 # Tương đương: "github.com/spf13/viper" trong Go (đơn giản hơn)
 # Giúp không hardcode password/config trong source code
 python-dotenv==1.1.0
+
+# --- Session 5 (EASM - MỚI THÊM) ---
+
+# dnspython - Thư viện để truy vấn DNS (giống net.Lookup trong Go)
+dnspython==2.7.0
+
+# python-whois - Thư viện truy vấn WHOIS (Python thuần)
+# Dùng thư viện tĩnh "whois" cho namespace importing
+python-whois==0.9.4
+
+# aiohttp - HTTP client bất đồng bộ / async (dành cho DNS bruteforce concurrency cao)
+aiohttp==3.13.3
+
+# --- Session 6 (Testing - MỚI THÊM) ---
+pytest==8.3.4
+pytest-asyncio==0.25.3
+pytest-cov==6.0.0
+httpx==0.28.1

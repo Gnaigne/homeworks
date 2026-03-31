@@ -1,0 +1,134 @@
+┌──(.venv)─(giangne㉿kali)-[~/Documents/CMC/Development/homeworks]
+└─$ pytest tests/               
+/home/giangne/Documents/CMC/Development/homeworks/.venv/lib/python3.13/site-packages/pytest_asyncio/plugin.py:207: PytestDeprecationWarning: The configuration option "asyncio_default_fixture_loop_scope" is unset.
+The event loop scope for asynchronous fixtures will default to the fixture caching scope. Future versions of pytest-asyncio will default the loop scope for asynchronous fixtures to function scope. Set the default fixture loop scope explicitly in order to avoid unexpected behavior in the future. Valid fixture loop scopes are: "function", "class", "module", "package", "session"
+
+  warnings.warn(PytestDeprecationWarning(_DEFAULT_FIXTURE_LOOP_SCOPE_UNSET))
+...................................................................................... [ 34%]
+...................................................................................... [ 69%]
+............................................................................           [100%]
+====================================== warnings summary ======================================
+tests/internal/scanner/test_scanners.py::TestDNSScanner::test_scan_non_domain_asset_skipped
+  /home/giangne/Documents/CMC/Development/homeworks/tests/internal/scanner/test_scanners.py:45: DeprecationWarning: There is no current event loop
+    return asyncio.get_event_loop().run_until_complete(coro)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+248 passed, 1 warning in 1.26s
+                                                                                              
+┌──(.venv)─(giangne㉿kali)-[~/Documents/CMC/Development/homeworks]
+└─$ pytest tests/ --cov=internal                                                   
+/home/giangne/Documents/CMC/Development/homeworks/.venv/lib/python3.13/site-packages/pytest_asyncio/plugin.py:207: PytestDeprecationWarning: The configuration option "asyncio_default_fixture_loop_scope" is unset.
+The event loop scope for asynchronous fixtures will default to the fixture caching scope. Future versions of pytest-asyncio will default the loop scope for asynchronous fixtures to function scope. Set the default fixture loop scope explicitly in order to avoid unexpected behavior in the future. Valid fixture loop scopes are: "function", "class", "module", "package", "session"
+
+  warnings.warn(PytestDeprecationWarning(_DEFAULT_FIXTURE_LOOP_SCOPE_UNSET))
+...................................................................................... [ 34%]
+...................................................................................... [ 69%]
+............................................................................           [100%]
+====================================== warnings summary ======================================
+tests/internal/scanner/test_scanners.py::TestDNSScanner::test_scan_non_domain_asset_skipped
+  /home/giangne/Documents/CMC/Development/homeworks/tests/internal/scanner/test_scanners.py:45: DeprecationWarning: There is no current event loop
+    return asyncio.get_event_loop().run_until_complete(coro)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+
+---------- coverage: platform linux, python 3.13.7-final-0 -----------
+Name                                         Stmts   Miss  Cover
+----------------------------------------------------------------
+internal/__init__.py                             0      0   100%
+internal/config/__init__.py                      0      0   100%
+internal/config/config.py                       15     15     0%
+internal/database/__init__.py                    0      0   100%
+internal/database/retry.py                      23     23     0%
+internal/handler/__init__.py                     0      0   100%
+internal/handler/asset_handler.py              106     17    84%
+internal/handler/health_handler.py              44     44     0%
+internal/handler/scan_handler.py               124     58    53%
+internal/model/__init__.py                       3      0   100%
+internal/model/asset.py                         31      0   100%
+internal/model/errors.py                        20      2    90%
+internal/model/scan.py                         188      0   100%
+internal/scanner/__init__.py                    10      0   100%
+internal/scanner/base.py                         7      1    86%
+internal/scanner/cert_trans_scanner.py          48      7    85%
+internal/scanner/dns_scanner.py                 31      0   100%
+internal/scanner/ip_scanner.py                  44      5    89%
+internal/scanner/port_scanner.py                78     13    83%
+internal/scanner/ssl_scanner.py                 86     48    44%
+internal/scanner/subdomain_scanner.py           75     63    16%
+internal/scanner/tech_scanner.py                54      5    91%
+internal/scanner/whois_scanner.py               32     22    31%
+internal/service/__init__.py                     0      0   100%
+internal/service/asset_service.py              126     42    67%
+internal/service/scan_service.py               151     80    47%
+internal/storage/__init__.py                     0      0   100%
+internal/storage/memory/__init__.py              0      0   100%
+internal/storage/memory/memory.py              123    123     0%
+internal/storage/postgres/__init__.py            0      0   100%
+internal/storage/postgres/postgres.py          242    242     0%
+internal/storage/postgres/scan_postgres.py     252    252     0%
+internal/storage/scan_storage.py                64     20    69%
+internal/storage/storage.py                     53     13    75%
+internal/validator/__init__.py                   2      0   100%
+internal/validator/asset_validator.py           91      3    97%
+----------------------------------------------------------------
+TOTAL                                         2123   1098    48%
+
+248 passed, 1 warning in 2.34s
+                                                                                              
+┌──(.venv)─(giangne㉿kali)-[~/Documents/CMC/Development/homeworks]
+└─$ pytest tests/ --cov=internal --cov-report=html:submissions/day3/coverage_report
+/home/giangne/Documents/CMC/Development/homeworks/.venv/lib/python3.13/site-packages/pytest_asyncio/plugin.py:207: PytestDeprecationWarning: The configuration option "asyncio_default_fixture_loop_scope" is unset.
+The event loop scope for asynchronous fixtures will default to the fixture caching scope. Future versions of pytest-asyncio will default the loop scope for asynchronous fixtures to function scope. Set the default fixture loop scope explicitly in order to avoid unexpected behavior in the future. Valid fixture loop scopes are: "function", "class", "module", "package", "session"
+
+  warnings.warn(PytestDeprecationWarning(_DEFAULT_FIXTURE_LOOP_SCOPE_UNSET))
+...................................................................................... [ 34%]
+...................................................................................... [ 69%]
+............................................................................           [100%]
+====================================== warnings summary ======================================
+tests/internal/scanner/test_scanners.py::TestDNSScanner::test_scan_non_domain_asset_skipped
+  /home/giangne/Documents/CMC/Development/homeworks/tests/internal/scanner/test_scanners.py:45: DeprecationWarning: There is no current event loop
+    return asyncio.get_event_loop().run_until_complete(coro)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+
+---------- coverage: platform linux, python 3.13.7-final-0 -----------
+Coverage HTML written to dir submissions/day3/coverage_report
+
+248 passed, 1 warning in 2.31s
+                                                                                              
+┌──(.venv)─(giangne㉿kali)-[~/Documents/CMC/Development/homeworks]
+└─$ pytest tests/internal/handler/test_asset_handler.py -v
+/home/giangne/Documents/CMC/Development/homeworks/.venv/lib/python3.13/site-packages/pytest_asyncio/plugin.py:207: PytestDeprecationWarning: The configuration option "asyncio_default_fixture_loop_scope" is unset.
+The event loop scope for asynchronous fixtures will default to the fixture caching scope. Future versions of pytest-asyncio will default the loop scope for asynchronous fixtures to function scope. Set the default fixture loop scope explicitly in order to avoid unexpected behavior in the future. Valid fixture loop scopes are: "function", "class", "module", "package", "session"
+
+  warnings.warn(PytestDeprecationWarning(_DEFAULT_FIXTURE_LOOP_SCOPE_UNSET))
+==================================== test session starts =====================================
+platform linux -- Python 3.13.7, pytest-8.3.4, pluggy-1.6.0
+rootdir: /home/giangne/Documents/CMC/Development/homeworks
+configfile: pyproject.toml
+plugins: asyncio-0.25.3, anyio-4.12.1, cov-6.0.0
+asyncio: mode=Mode.STRICT, asyncio_default_fixture_loop_scope=None
+collected 24 items                                                                           
+
+tests/internal/handler/test_asset_handler.py ........................                  [100%]
+
+===================================== 24 passed in 0.53s =====================================
+                                                                                              
+┌──(.venv)─(giangne㉿kali)-[~/Documents/CMC/Development/homeworks]
+└─$ pytest tests/internal/model/test_scan.py -v 
+/home/giangne/Documents/CMC/Development/homeworks/.venv/lib/python3.13/site-packages/pytest_asyncio/plugin.py:207: PytestDeprecationWarning: The configuration option "asyncio_default_fixture_loop_scope" is unset.
+The event loop scope for asynchronous fixtures will default to the fixture caching scope. Future versions of pytest-asyncio will default the loop scope for asynchronous fixtures to function scope. Set the default fixture loop scope explicitly in order to avoid unexpected behavior in the future. Valid fixture loop scopes are: "function", "class", "module", "package", "session"
+
+  warnings.warn(PytestDeprecationWarning(_DEFAULT_FIXTURE_LOOP_SCOPE_UNSET))
+==================================== test session starts =====================================
+platform linux -- Python 3.13.7, pytest-8.3.4, pluggy-1.6.0
+rootdir: /home/giangne/Documents/CMC/Development/homeworks
+configfile: pyproject.toml
+plugins: asyncio-0.25.3, anyio-4.12.1, cov-6.0.0
+asyncio: mode=Mode.STRICT, asyncio_default_fixture_loop_scope=None
+collected 49 items                                                                           
+
+tests/internal/model/test_scan.py .................................................    [100%]
+
+===================================== 49 passed in 0.10s =====================================
+     

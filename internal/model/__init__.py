@@ -25,3 +25,18 @@ from internal.model.errors import (
     InvalidTypeError,
     InvalidStatusError,
 )
+
+# [Session 5] Tính năng EASM
+from internal.model.scan import (
+    ScanType,
+    ScanStatus,
+    ScanJob,
+    CreateScanJobRequest,
+    DNSRecord,
+    CreateDNSRecordRequest,
+    WhoisRecord,
+    CreateWhoisRecordRequest,
+    SubdomainRecord,
+    CreateSubdomainRecordRequest,
+    AssetScanResultsResponse,
+)

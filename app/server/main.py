@@ -100,14 +100,18 @@ load_dotenv(Path(PROJECT_ROOT) / ".env")
 
 import uvicorn
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 from internal.handler.asset_handler import create_asset_router
 from internal.handler.health_handler import create_health_router
+from internal.handler.scan_handler import create_scan_router
 from internal.service.asset_service import AssetService
+from internal.service.scan_service import ScanService
 
 # --- [SESSION 3] Import thêm config và PostgresStorage ---
 from internal.config.config import load_postgres_config
 from internal.storage.postgres.postgres import PostgresStorage
+from internal.storage.postgres.scan_postgres import PostgresScanStorage
 # Giữ lại MemoryStorage để dễ chuyển đổi khi cần
 from internal.storage.memory.memory import MemoryStorage
 
@@ -180,12 +184,21 @@ def create_app() -> FastAPI:
         #   → Nếu hết 5 lần vẫn fail → sys.exit(1)
         config = load_postgres_config()
         store = PostgresStorage.from_config(config)
+        
+        # Tạo Scan Storage
+        scan_store = PostgresScanStorage.from_config(config)
         logger.info("✅ Storage initialized: PostgreSQL (with connection retry)")
 
     # --- 2. Khởi tạo Service Layer (Business Logic) ---
     # ✨ KHÔNG THAY ĐỔI! Service không biết storage là Memory hay Postgres
     asset_service = AssetService(store)
-    logger.info("✅ Service initialized: AssetService")
+    
+    # Khởi tạo ScanService (chỉ dùng db, báo lỗi nếu dùng in-memory vì ta chỉ implement Postgres)
+    if use_memory:
+        raise NotImplementedError("ScanService không hỗ trợ In-Memory Storage.")
+    scan_service = ScanService(asset_storage=store, scan_storage=scan_store)
+    
+    logger.info("✅ Service initialized: AssetService & ScanService")
 
     # --- 3. Khởi tạo Handler Layer (HTTP) ---
     # [BÀI 5] Truyền store cho health handler để kiểm tra sức khỏe DB
@@ -193,6 +206,7 @@ def create_app() -> FastAPI:
     start_time = datetime.now(timezone.utc)
     health_router = create_health_router(start_time, storage=store)
     asset_router = create_asset_router(asset_service)
+    scan_router = create_scan_router(scan_service)
     logger.info("✅ Handlers initialized")
 
     # --- 4. Tạo FastAPI App và đăng ký routes ---
@@ -207,9 +221,20 @@ def create_app() -> FastAPI:
         redirect_slashes=False,  # Tắt 307 redirect: /assets → /assets/ để curl không bị mất data
     )
 
+    # Cấu hình CORS (Cross-Origin Resource Sharing)
+    # Cho phép Frontend (chạy ở cổng 3000 hoặc localhost) gọi API mà không bị trình duyệt block
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["*"],  # Cho phép tất cả các trang web gọi API (trong thực tế  production thì nên thay bằng ["http://localhost:3000"])
+        allow_credentials=True,
+        allow_methods=["*"],  # Cho phép mọi phương thức (GET, POST, PUT, DELETE, OPTIONS)
+        allow_headers=["*"],  # Cho phép mọi Headers
+    )
+
     # include_router gắn router vào app — tương đương mux.HandleFunc() trong Go
     app.include_router(health_router)
     app.include_router(asset_router)
+    app.include_router(scan_router)
 
     # --- [SESSION 3] Đóng database connection khi server shutdown ---
     # Tương đương Go: defer db.Close()
@@ -266,7 +291,7 @@ if __name__ == "__main__":
     #     → Worker process mới gọi create_app() → kết nối DB DUY NHẤT 1 lần
     uvicorn.run(
         "app.server.main:create_app",  # Trỏ đến FUNCTION (không phải biến app)
-        host="0.0.0.0",
+        host="0.0.0.0",  # nosec B104
         port=8080,
         reload=True,
         log_level="info",

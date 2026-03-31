@@ -33,3 +33,16 @@ Thumbs.db
 # Project-specific
 # =============================================================================
 Prompt.md
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+
+# Database data (if any)
+postgres_data/
+pgdata/
+
+# Testing and Coverage
+htmlcov/
+.coverage
+.pytest_cache/

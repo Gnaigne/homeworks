@@ -1,0 +1,46 @@
+name: Deploy to Production
+
+on:
+  push:
+    branches: [main, homework]
+
+jobs:
+  deploy:
+    name: Deploy to VM
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Dùng SSH key để kết nối vào server tự động
+      - name: Deploy to server via SSH
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            # 1. Di chuyển vào thư mục code (Bạn kiểm tra lại đường dẫn này nếu khác trên máy ảo)
+            cd /home/ubuntu/code/homeworks
+
+            # 2. Xác định xem branch nào vừa trigger event (main hay homework)
+            # ${{ github.ref_name }} sẽ luân phiên lấy theo branch tương ứng trên Github
+            git fetch --all
+            git checkout ${{ github.ref_name }}
+            
+            # 3. Kéo code mới nhất về từ branch hiện tại
+            git pull origin ${{ github.ref_name }}
+
+            # 4. Rebuild và Restart Docker Compose bằng bash script dự án
+            chmod +x deploy.sh
+            ./deploy.sh rebuild
+            ./deploy.sh start
+            
+            # 5. Kiểm tra trạng thái các container sau khi chạy
+            ./deploy.sh status
+
+      - name: Health check
+        run: |
+          echo "Waiting for services to start..."
+          sleep 30
+          # Kiểm tra xem API Health Check có lên thành công không
+          curl -f https://easm-giang.ddns.net/api/health || exit 1

@@ -28,6 +28,7 @@ from typing import List, Optional
 from fastapi import APIRouter, HTTPException, Query
 
 from internal.model.asset import Asset, CreateAssetRequest, UpdateAssetRequest, BatchCreateAssetRequest
+from internal.storage.storage import QueryParams
 from internal.model.errors import (
     AssetNotFoundError,
     InvalidInputError,
@@ -368,12 +369,14 @@ def create_asset_router(service: AssetService) -> APIRouter:
     @router.get(
         "/search",
         response_model=List[Asset],
-        summary="Tìm kiếm asset theo tên",
+        summary="[DEPRECATED] Tìm kiếm asset theo tên",
         description=(
+            "LƯU Ý: Khuyên dùng GET /assets?search=... (Session 4)\n\n"
             "Tìm asset có tên chứa từ khóa (case-insensitive, partial match).\n"
             "- `?q=example` → tìm tất cả asset có name chứa 'example'\n"
             "- Trả về tối đa 100 kết quả"
         ),
+        deprecated=True,
     )
     def search_assets(
         q: str = Query(
@@ -396,55 +399,44 @@ def create_asset_router(service: AssetService) -> APIRouter:
             raise _map_error_to_http(e)
 
     # -----------------------------------------------------------------
-    # [BÀI 6] GET /assets — Liệt kê asset với pagination + filter
+    # [SESSION 4] GET /assets — Liệt kê asset (Filter + Search + Sort + Paginate)
     # -----------------------------------------------------------------
     @router.get(
         "",
-        summary="Liệt kê asset với phân trang và lọc",
+        summary="Liệt kê asset với phân trang, lọc, tìm kiếm và sắp xếp",
         description=(
-            "Lấy danh sách asset có phân trang.\n"
-            "- `?page=1&limit=20` → trang và số item/trang\n"
-            "- `?type=domain` → lọc theo loại\n"
-            "- `?status=active` → lọc theo trạng thái\n"
-            "- Kết hợp tùy ý: `?page=2&limit=10&type=domain&status=active`"
+            "[Session 4] Phương thức duy nhất để query danh sách asset.\n"
+            "- Phân trang: `?page=1&page_size=20`\n"
+            "- Lọc: `?type=domain&status=active`\n"
+            "- Tìm kiếm: `?search=example`\n"
+            "- Sắp xếp: `?sort_by=created_at&sort_order=desc`\n"
         ),
     )
     def list_assets(
         page: int = Query(1, ge=1, description="Số trang (bắt đầu từ 1)"),
-        limit: int = Query(20, ge=1, le=100, description="Số item mỗi trang (tối đa 100)"),
+        page_size: int = Query(20, ge=1, le=100, description="Số item mỗi trang (tối đa 100)"),
         type: Optional[str] = Query(None, description="Lọc theo loại: domain, ip, service"),
         status: Optional[str] = Query(None, description="Lọc theo trạng thái: active, inactive"),
+        search: Optional[str] = Query(None, description="Tìm kiếm theo tên (partial match)"),
+        sort_by: str = Query("created_at", description="Trường để sắp xếp (name, type, status, created_at, updated_at)"),
+        sort_order: str = Query("desc", description="Thứ tự sắp xếp (asc, desc)"),
     ) -> dict:
         """
-        Xử lý GET /assets với pagination và filter.
+        Xử lý GET /assets với filter + search + sort + pagination.
 
-        FastAPI tự parse query params:
-            GET /assets?page=2&limit=10&type=domain
-            → page=2, limit=10, type="domain", status=None
-
-        Response format:
-            {
-                "data": [...],
-                "pagination": {
-                    "page": 2,
-                    "limit": 10,
-                    "total": 150,
-                    "total_pages": 15
-                }
-            }
-
-        ge=1 trong Query(1, ge=1) nghĩa là gì?
-            - ge = "greater than or equal" — FastAPI validate tự động
-            - Query(1, ge=1) = default 1, giá trị phải >= 1
-            - Nếu client gửi page=0 → FastAPI tự trả 422 (không vào hàm này)
+        Gộp tất cả các tham số query vào 1 struct QueryParams như Go session 4.
         """
         try:
-            result = service.list_assets_paginated(
+            params = QueryParams(
                 page=page,
-                limit=limit,
+                page_size=page_size,
                 asset_type=type,
                 status=status,
+                search=search,
+                sort_by=sort_by,
+                sort_order=sort_order,
             )
+            result = service.list_assets(params)
             return result
         except Exception as e:
             raise _map_error_to_http(e)

@@ -73,45 +73,46 @@ Sau khi đăng nhập pgAdmin, cần tạo server connection:
 | GET | `/health` | Health check + database status |
 | POST | `/assets` | Tạo asset mới |
 | POST | `/assets/batch` | Tạo nhiều asset (transaction) |
-| GET | `/assets` | Liệt kê với pagination + filter |
+| GET | `/assets` | Liệt kê với filter, search, sort, pagination |
 | GET | `/assets/stats` | Thống kê tổng quan |
 | GET | `/assets/count` | Đếm asset theo filter |
-| GET | `/assets/search?q=...` | Tìm kiếm theo tên |
+| GET | `/assets/search?q=...` | [DEPRECATED] Tìm kiếm theo tên |
 | GET | `/assets/{id}` | Lấy asset theo ID |
 | PUT | `/assets/{id}` | Cập nhật asset |
 | DELETE | `/assets/{id}` | Xóa asset |
 | DELETE | `/assets/batch?ids=...` | Xóa nhiều asset |
+| POST | `/assets/{id}/scan` | Bắt đầu quét EASM (Background Tasks) |
+| GET | `/scan-jobs/{id}` | Lấy thông tin & trạng thái quét |
+| GET | `/scan-jobs/{id}/results` | Xem kết quả của riêng một job |
+| GET | `/assets/{id}/results` | Xem toàn bộ kết quả quét của Asset |
 
-## 🏃 Cách chạy cơ bản (Không dùng Makefile)
+## 🏃 Cách chạy cơ bản (Session 7 - Khuyên dùng)
 
-Nếu không muốn dùng `make`, có thể chạy tuần tự các lệnh sau:
+Dự án hiện tại bao gồm cả **Frontend (React)** và **Backend (Python FastAPI)** được đóng gói hoàn toàn trong Docker.
 
-### 1. Tạo và kích hoạt môi trường ảo
+### 1. Khởi động toàn bộ Hệ thống (Full Stack)
 
+Chỉ cần duy nhất 1 lệnh Make thần thánh này:
 ```bash
-# Linux / macOS:
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
+make up
+# Hoặc: ./deploy.sh start (Nếu bạn thích dùng Bash script)
+```
+> Lệnh này sẽ dựng 3 Container: Database (Port 5432), Backend API (Port 8080), và Frontend Nginx (Port 3000).
 
-# Windows PowerShell:
-python -m venv .venv
-.\.venv\Scripts\activate
-pip install -r requirements.txt
+### 2. Truy cập Ứng dụng
+- **Giao diện Web (Mini ASM):** Mở trình duyệt truy cập http://localhost:3000
+- **API Swagger Docs:** Mở trình duyệt http://localhost:8080/docs
+- **Quản lý Database (PgAdmin):** Mở http://localhost:5050 (Tài khoản: admin@admin.com / admin)
+
+### 3. Xem Log các dịch vụ
+```bash
+make logs
+# Xem log riêng Backend: ./deploy.sh logs backend
 ```
 
-### 2. Khởi động Database (Docker)
-
+### 4. Tắt Toàn bộ hệ thống
 ```bash
-docker compose up -d
-```
-
-### 3. Chạy Server
-
-```bash
-# Đảm bảo đang ở thư mục gốc chứa file requirements.txt
-# Đảm bảo môi trường ảo (.venv) đã được kích hoạt
-python -m app.server.main
+make down
 ```
 
 ---

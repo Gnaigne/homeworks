@@ -23,7 +23,7 @@ from typing import List, Optional
 
 from internal.model.asset import Asset
 from internal.model.errors import AssetNotFoundError, DuplicateAssetError
-from internal.storage.storage import Storage
+from internal.storage.storage import Storage, QueryParams
 
 
 class MemoryStorage(Storage):
@@ -360,3 +360,81 @@ class MemoryStorage(Storage):
             page_data = assets[offset : offset + limit]
 
             return {"data": page_data, "total": total}
+
+    # =========================================================================
+    # [SESSION 4] UNIFIED LIST — Gộp filter + search + sort + pagination
+    # =========================================================================
+
+    def list_assets(self, params: QueryParams) -> dict:
+        """
+        [Session 4] Lấy danh sách asset với filter + search + sort + pagination.
+
+        In-memory version: dùng Python list operations thay vì SQL.
+        Tương đương Go: func (m *MemoryStorage) GetAll(params QueryParams) (*PaginatedResult, error)
+
+        Flow:
+            1. Lấy tất cả assets từ dict
+            2. Filter theo type, status (list comprehension)
+            3. Search theo name (case-insensitive)
+            4. Sort theo sort_by/sort_order
+            5. Phân trang bằng slice
+
+        Args:
+            params: QueryParams chứa filter, search, sort, pagination
+
+        Returns:
+            dict {"data": [...], "total": int, "page": int, "page_size": int, "total_pages": int}
+        """
+        with self._lock:
+            # Bước 1: Lấy tất cả assets
+            assets = list(self._data.values())
+
+            # Bước 2: Filter theo type
+            if params.asset_type:
+                assets = [a for a in assets if a.type.value == params.asset_type]
+
+            # Filter theo status
+            if params.status:
+                assets = [a for a in assets if a.status.value == params.status]
+
+            # Bước 3: Search theo name (case-insensitive)
+            if params.search:
+                search_lower = params.search.lower()
+                assets = [a for a in assets if search_lower in a.name.lower()]
+
+            # Bước 4: Sort — Tương đương Go: sort.Slice(assets, ...)
+            # Whitelist check (defense in depth)
+            valid_sort_fields = {"name", "type", "status", "created_at", "updated_at"}
+            sort_by = params.sort_by if params.sort_by in valid_sort_fields else "created_at"
+            reverse = params.sort_order != "asc"  # desc = True (giảm dần)
+
+            # getattr(asset, sort_by) lấy giá trị của field tương ứng
+            # Ví dụ: sort_by="name" → getattr(asset, "name") → "example.com"
+            # Nếu field là Enum (type, status) thì lấy .value để so sánh bằng string
+            def sort_key(asset):
+                value = getattr(asset, sort_by)
+                # Enum.value lấy giá trị string từ Enum (ví dụ: AssetType.DOMAIN.value → "domain")
+                if hasattr(value, 'value'):
+                    return value.value
+                return value
+
+            assets.sort(key=sort_key, reverse=reverse)
+
+            # Tổng số asset sau khi filter (trước khi phân trang)
+            total = len(assets)
+
+            # Bước 5: Phân trang bằng Python slice
+            # Tương đương SQL: LIMIT page_size OFFSET offset
+            offset = (params.page - 1) * params.page_size
+            page_data = assets[offset : offset + params.page_size]
+
+            # Tính total_pages
+            total_pages = (total + params.page_size - 1) // params.page_size if total > 0 else 0
+
+            return {
+                "data": page_data,
+                "total": total,
+                "page": params.page,
+                "page_size": params.page_size,
+                "total_pages": total_pages,
+            }
